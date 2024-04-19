@@ -1,6 +1,8 @@
-# incomplete-json-parser
+# incomplete-json-parser 
 
-> A streaming JSON parser that can handle incomplete or chunked JSON data.
+> A JSON parser that can parse incomplete JSON strings.
+
+
 
 ## What is incomplete-json-parser?
 
@@ -12,6 +14,8 @@ The parser is designed to be flexible and can handle various scenarios, such as:
 - JSON data split across multiple chunks
 - Incomplete string values
 
+
+
 ## Installation
 
 To install incomplete-json-parser, use the following command:
@@ -21,14 +25,16 @@ npm install incomplete-json-parser
 yarn add incomplete-json-parser
 ```
 
+
+
 ## Usage
 
 Here's an example of how to use incomplete-json-parser:
 
 ```typescript
-import { JSONStreamParser } from 'incomplete-json-parser';
+import { IncompleteJsonParser } from 'incomplete-json-parser';
 
-const parser = new JSONStreamParser();
+const parser = new IncompleteJsonParser();
 
 // Write incomplete JSON data to the parser
 parser.write('{"name": "John", "age": 30, "city": "New');
@@ -40,15 +46,34 @@ console.log(result);
 // Output: { name: 'John', age: 30, city: 'New York', hobbies: ['reading', 'gaming'] }
 ```
 
-In this example, we create an instance of the `JSONStreamParser` and write incomplete JSON data to it using the `write` method. We can write data in multiple chunks, simulating a streaming scenario.
+In this example, we create an instance of the `IncompleteJsonParser` and write incomplete JSON data to it using the `write` method. We can write data in multiple chunks, simulating a streaming scenario.
 
 Once we have written all the necessary data, we call the `getObjects` method to parse the accumulated JSON data and retrieve the resulting JavaScript object.
 
+
+
 ## API
 
-### `new JSONStreamParser()`
+### `new IncompleteJsonParser()`
 
-Creates a new instance of the `JSONStreamParser`.
+Creates a new instance of the `IncompleteJsonParser`.
+
+### `static parse(chunk: string): any`
+
+A static method that allows parsing JSON data in a single step. It creates a new instance of `IncompleteJsonParser`, writes the provided `chunk` to it, and returns the parsed JavaScript object.
+
+### Using the `parse` Static Method
+
+```typescript
+const json = '{"name": "Alice", "age": 25, "city": "London"';
+const result = IncompleteJsonParser.parse(json);
+console.log(result);
+// Output: { name: 'Alice', age: 25, city: 'London' }
+```
+
+### `reset(): void`
+
+Resets the parser's internal state, clearing the buffer, accumulator, pointer, and path. This method is useful when you want to reuse the same parser instance for parsing multiple JSON objects.
 
 ### `write(chunk: string): void`
 
@@ -58,6 +83,8 @@ Writes a chunk of JSON data to the parser's internal buffer.
 
 Parses the accumulated JSON data and returns the parsed JavaScript object.
 
+
+
 ## Examples
 
 Here are a few more examples demonstrating the capabilities of incomplete-json-parser:
@@ -65,7 +92,7 @@ Here are a few more examples demonstrating the capabilities of incomplete-json-p
 ### Handling Incomplete JSON Objects
 
 ```typescript
-const parser = new JSONStreamParser();
+const parser = new IncompleteJsonParser();
 
 parser.write('{"name": "Alice", "age": 25, "city": "London"');
 const result = parser.getObjects();
@@ -76,7 +103,7 @@ console.log(result);
 ### Handling Incomplete JSON Arrays
 
 ```typescript
-const parser = new JSONStreamParser();
+const parser = new IncompleteJsonParser();
 
 parser.write('["apple", "banana", "orange"');
 const result = parser.getObjects();
@@ -87,7 +114,7 @@ console.log(result);
 ### Handling Incomplete String Values
 
 ```typescript
-const parser = new JSONStreamParser();
+const parser = new IncompleteJsonParser();
 
 parser.write('{"message": "Hello, world!');
 const result = parser.getObjects();
@@ -98,7 +125,7 @@ console.log(result);
 ### Handling `null` Values with Different Lengths
 
 ```typescript
-const parser = new JSONStreamParser();
+const parser = new IncompleteJsonParser();
 
 parser.write('{"value": n');
 const result1 = parser.getObjects();
@@ -111,6 +138,8 @@ console.log(result2);
 // Output: { value: null }
 ```
 
+
+
 ## Author
 
 👤 **Dante Chun**
@@ -118,13 +147,19 @@ console.log(result2);
 * Website: https://dante.company
 * Github: [@1000ship](https://github.com/1000ship)
 
+
+
 ## 🤝 Contributing
 
 Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/1000ship/incomplete-json-parser/issues). 
 
+
+
 ## Show your support
 
 Give a ⭐️ if this project helped you!
+
+
 
 ## 📝 License
 
