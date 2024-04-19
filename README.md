@@ -2,6 +2,10 @@
 
 > A JSON parser that can parse incomplete JSON strings.
 
+## Demo
+
+https://github.com/1000ship/incomplete-json-parser/assets/2270565/be71774c-612a-4057-9a60-0c9ffebbb8fe
+
 
 
 ## What is incomplete-json-parser?
