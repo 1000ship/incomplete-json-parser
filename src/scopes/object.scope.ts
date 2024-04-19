@@ -93,6 +93,11 @@ export class ObjectScope extends Scope {
             this.keyScope = undefined;
             this.valueScope = undefined;
             return true;
+          } else if (letter === "}") {
+            const key = this.keyScope!.getOrAssume();
+            this.object[key as string] = this.valueScope!.getOrAssume();
+            this.finish = true;
+            return true;
           } else {
             throw new Error(`Expected comma, got ${letter}`);
           }

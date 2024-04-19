@@ -233,4 +233,45 @@ describe("IncompleteJsonParser", () => {
     parser.reset();
     expect(() => parser.getObjects()).toThrowError("No input to parse");
   });
+
+  it("should pass the test", () => {
+    const jsonString = `
+{
+  "id": 12345,
+  "name": "John Doe",
+  "isActive": true,
+  "age": 30,
+  "email": "john.doe@example.com",
+  "address": {
+    "street": "123 Main St",
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "country": "USA",
+    "location": {
+      "lat": 40.7128,
+      "lng": -74.0060
+    }
+  }`.trim();
+    const parser = new IncompleteJsonParser();
+    parser.write(jsonString);
+    expect(parser.getObjects()).toEqual({
+      id: 12345,
+      name: "John Doe",
+      isActive: true,
+      age: 30,
+      email: "john.doe@example.com",
+      address: {
+        street: "123 Main St",
+        city: "New York",
+        state: "NY",
+        zipCode: "10001",
+        country: "USA",
+        location: {
+          lat: 40.7128,
+          lng: -74.006,
+        },
+      },
+    });
+  });
 });
