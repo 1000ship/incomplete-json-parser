@@ -1,5 +1,5 @@
 import { describe, expect } from "@jest/globals";
-import { JSONStreamParser } from ".";
+import { JSONStreamParser } from "../dist";
 
 describe("JSONStreamParser", () => {
   let parser: JSONStreamParser;
