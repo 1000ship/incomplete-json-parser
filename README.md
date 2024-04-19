@@ -1,10 +1,10 @@
-# json-stream-parser
+# incomplete-json-parser
 
 > A streaming JSON parser that can handle incomplete or chunked JSON data.
 
-## What is json-stream-parser?
+## What is incomplete-json-parser?
 
-json-stream-parser is a TypeScript module that provides a streaming JSON parser. It can handle incomplete or chunked JSON data, making it useful for parsing JSON data that arrives in multiple parts or when dealing with large JSON files.
+incomplete-json-parser is a TypeScript module that provides a streaming JSON parser. It can handle incomplete or chunked JSON data, making it useful for parsing JSON data that arrives in multiple parts or when dealing with large JSON files.
 
 The parser is designed to be flexible and can handle various scenarios, such as:
 
@@ -14,19 +14,19 @@ The parser is designed to be flexible and can handle various scenarios, such as:
 
 ## Installation
 
-To install json-stream-parser, use the following command:
+To install incomplete-json-parser, use the following command:
 
 ```bash
-npm install json-stream-parser
-yarn add json-stream-parser
+npm install incomplete-json-parser
+yarn add incomplete-json-parser
 ```
 
 ## Usage
 
-Here's an example of how to use json-stream-parser:
+Here's an example of how to use incomplete-json-parser:
 
 ```typescript
-import { JSONStreamParser } from 'json-stream-parser';
+import { JSONStreamParser } from 'incomplete-json-parser';
 
 const parser = new JSONStreamParser();
 
@@ -60,7 +60,7 @@ Parses the accumulated JSON data and returns the parsed JavaScript object.
 
 ## Examples
 
-Here are a few more examples demonstrating the capabilities of json-stream-parser:
+Here are a few more examples demonstrating the capabilities of incomplete-json-parser:
 
 ### Handling Incomplete JSON Objects
 
@@ -120,7 +120,7 @@ console.log(result2);
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/1000ship/json-stream-parser/issues). 
+Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/1000ship/incomplete-json-parser/issues). 
 
 ## Show your support
 

@@ -1,3 +1,3 @@
-import { JSONStreamParser } from "./JSONStreamParser";
+import { IncompleteJsonParser } from "./IncompleteJsonParser";
 
-export { JSONStreamParser };
+export { IncompleteJsonParser };

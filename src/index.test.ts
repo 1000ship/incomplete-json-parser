@@ -1,11 +1,12 @@
 import { describe, expect } from "@jest/globals";
-import { JSONStreamParser } from "../dist";
+import { IncompleteJsonParser } from "./index";
+import test from "node:test";
 
-describe("JSONStreamParser", () => {
-  let parser: JSONStreamParser;
+describe("IncompleteJsonParser", () => {
+  let parser: IncompleteJsonParser;
 
   beforeEach(() => {
-    parser = new JSONStreamParser();
+    parser = new IncompleteJsonParser();
   });
 
   it("should parse complete JSON objects", () => {
@@ -70,7 +71,7 @@ describe("JSONStreamParser", () => {
   });
 
   it("should handle escaped characters within strings", () => {
-    const parser = new JSONStreamParser();
+    const parser = new IncompleteJsonParser();
     const jsonString = '{"name":"John","message":"Hello, \\"World\\"! [{}]"}';
     parser.write(jsonString);
     expect(parser.getObjects()).toEqual({
@@ -80,7 +81,7 @@ describe("JSONStreamParser", () => {
   });
 
   it("should handle incomplete null values", () => {
-    const parser = new JSONStreamParser();
+    const parser = new IncompleteJsonParser();
     const jsonString1 = '{"name":"John","age":30,"isStudent":n';
     const jsonString2 = "ull}";
     parser.write(jsonString1);
@@ -100,7 +101,7 @@ describe("JSONStreamParser", () => {
   it("should handle null values with different lengths", () => {
     const testCases = ["n", "nu", "nul", "null"];
     testCases.forEach((nullValue) => {
-      const parser = new JSONStreamParser();
+      const parser = new IncompleteJsonParser();
       const jsonString = `{"name":"John","age":30,"isStudent":${nullValue}`;
       parser.write(jsonString);
       expect(parser.getObjects()).toEqual({
@@ -164,5 +165,27 @@ describe("JSONStreamParser", () => {
       age: 30,
       city: "New York",
     });
+  });
+
+  test("'IncompleteJsonParser.parse' works as expected", () => {
+    const jsonString = '{"name":"John","age":30,"city":"New York"}';
+    expect(IncompleteJsonParser.parse(jsonString)).toEqual({
+      name: "John",
+      age: 30,
+      city: "New York",
+    });
+  });
+
+  test("'reset' works as expected", () => {
+    const jsonString = '{"name":"John","age":30,"city":"New ';
+    const parser = new IncompleteJsonParser();
+    parser.write(jsonString);
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+      age: 30,
+      city: "New ",
+    });
+    parser.reset();
+    expect(parser.getObjects()).toBeUndefined();
   });
 });

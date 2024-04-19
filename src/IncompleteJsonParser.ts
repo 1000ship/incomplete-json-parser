@@ -1,8 +1,21 @@
-export class JSONStreamParser {
+export class IncompleteJsonParser {
   private buffer: string = "";
   private acculmulator: string = "";
   private pointer: number = 0;
   private path: string[] = [];
+
+  static parse(chunk: string): any {
+    const parser = new IncompleteJsonParser();
+    parser.write(chunk);
+    return parser.getObjects();
+  }
+
+  reset(): void {
+    this.buffer = "";
+    this.acculmulator = "";
+    this.pointer = 0;
+    this.path = [];
+  }
 
   write(chunk: string): void {
     this.buffer += chunk;

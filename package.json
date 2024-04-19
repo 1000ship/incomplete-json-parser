@@ -1,7 +1,7 @@
 {
-  "name": "json-stream-parser",
+  "name": "incomplete-json-parser",
   "version": "1.0.0",
-  "homepage": "https://github.com/1000ship/json-stream-parser",
+  "homepage": "https://github.com/1000ship/incomplete-json-parser",
   "author": {
     "name": "Dante Chun",
     "email": "dev.1000ship@gmail.com",
@@ -9,14 +9,16 @@
   },
   "bugs": {
     "email": "dev.1000ship@gmail.com",
-    "url": "https://github.com/1000ship/json-stream-parser/issues"
+    "url": "https://github.com/1000ship/incomplete-json-parser/issues"
   },
-  "description": "A simple JSON stream parser",
+  "description": "A JSON parser that can parse incomplete JSON strings.",
   "keywords": [
     "json",
     "parser",
     "stream",
-    "incompleted JSON"
+    "streaming",
+    "incomplete",
+    "fragment"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
