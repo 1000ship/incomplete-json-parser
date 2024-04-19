@@ -4,8 +4,7 @@
 
 ## Demo
 
-https://github.com/1000ship/incomplete-json-parser/assets/2270565/be71774c-612a-4057-9a60-0c9ffebbb8fe
-
+![demo-small](https://github.com/1000ship/incomplete-json-parser/assets/2270565/a16c9078-a573-40dd-85cb-f2113b03eb56)
 
 
 ## What is incomplete-json-parser?
