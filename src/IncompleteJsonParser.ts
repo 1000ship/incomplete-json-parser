@@ -1,8 +1,9 @@
+import { ArrayScope, LiteralScope, ObjectScope, Scope } from "./scopes";
+import { isWhitespace } from "./scopes/utils";
+
 export class IncompleteJsonParser {
-  private buffer: string = "";
-  private acculmulator: string = "";
-  private pointer: number = 0;
-  private path: string[] = [];
+  private scope?: Scope;
+  private finish: boolean = false;
 
   static parse(chunk: string): any {
     const parser = new IncompleteJsonParser();
@@ -11,100 +12,40 @@ export class IncompleteJsonParser {
   }
 
   reset(): void {
-    this.buffer = "";
-    this.acculmulator = "";
-    this.pointer = 0;
-    this.path = [];
+    this.scope = undefined;
+    this.finish = false;
   }
 
   write(chunk: string): void {
-    this.buffer += chunk;
+    for (let i = 0; i < chunk.length; i++) {
+      if (this.finish) throw new Error("Parser is already finished");
+
+      const letter = chunk[i];
+      if (this.scope === undefined) {
+        if (isWhitespace(letter)) continue;
+        else if (letter === "{") this.scope = new ObjectScope();
+        else if (letter === "[") this.scope = new ArrayScope();
+        else this.scope = new LiteralScope();
+        this.scope.write(letter);
+      } else {
+        const success = this.scope.write(letter);
+        if (success) {
+          if (this.scope.finish) {
+            this.finish = true;
+            continue;
+          }
+        } else {
+          throw new Error("Failed to parse the JSON string");
+        }
+      }
+    }
   }
 
   getObjects(): any {
-    let postfix = "";
-    this.acculmulator += this.buffer;
-    this.buffer = "";
-
-    let i;
-    for (i = this.pointer; i < this.acculmulator.length; i++) {
-      const char = this.acculmulator[i];
-
-      // Skip if the character is a space
-      if (this.path[this.path.length - 1] !== '"') {
-        if (char === "{" || char === "[") {
-          this.path.push(char);
-        } else if (char === "}" && this.path[this.path.length - 1] === "{") {
-          this.path.pop();
-        } else if (char === "]" && this.path[this.path.length - 1] === "[") {
-          this.path.pop();
-        } else if (char === "n") {
-          const remainingChars = this.acculmulator.slice(i);
-          if (remainingChars.startsWith("null")) {
-            i += 3;
-          } else if (remainingChars === "nul") {
-            i += 2;
-            postfix = "l";
-          } else if (remainingChars === "nu") {
-            i += 1;
-            postfix = "ll";
-          } else {
-            postfix = "ull";
-          }
-        }
-      }
-
-      // Handle escaped characters
-      if (char === '"') {
-        if (
-          this.path[this.path.length - 1] === '"' &&
-          this.acculmulator[i - 1] !== "\\"
-        ) {
-          this.path.pop();
-        } else if (this.path[this.path.length - 1] !== '"') {
-          this.path.push(char);
-        }
-      }
-    }
-    this.pointer = i;
-
-    // Post-process the buffer
-    let result = this.acculmulator;
-    let resultPath = [...this.path];
-    let parsed: any;
-
-    // If there's redundant , at the end, remove it
-    if (result.endsWith(",")) {
-      result = result.slice(0, -1);
-    }
-
-    // Complete 'null' values
-    if (postfix.length > 0) {
-      result += postfix;
-    }
-
-    // Add missing parts to the buffer
-    if (resultPath.length > 0) {
-      const missingParts = resultPath
-        .reverse()
-        .map((char) => {
-          if (char === "{") return "}";
-          if (char === "[") return "]";
-          if (char === '"') return '"';
-          return char;
-        })
-        .join("");
-      result += missingParts;
-    }
-
-    // Attempt to parse the buffer
-    try {
-      parsed = JSON.parse(result);
-      return parsed;
-    } catch (error) {
-      if (!(error instanceof SyntaxError)) {
-        throw error;
-      }
+    if (this.scope) {
+      return this.scope.getOrAssume();
+    } else {
+      throw new Error("No input to parse");
     }
   }
 }

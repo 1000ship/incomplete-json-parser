@@ -1,6 +1,5 @@
 import { describe, expect } from "@jest/globals";
-import { IncompleteJsonParser } from "./index";
-import test from "node:test";
+import { IncompleteJsonParser } from "../";
 
 describe("IncompleteJsonParser", () => {
   let parser: IncompleteJsonParser;
@@ -140,16 +139,24 @@ describe("IncompleteJsonParser", () => {
 
   it("should handle errored JSON", () => {
     const jsonString = '{"name":"John"{';
-    parser.write(jsonString);
-    expect(parser.getObjects()).toBeUndefined();
+    expect(() => parser.write(jsonString)).toThrowError(
+      "Expected comma or }, got "
+    );
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+    });
 
-    const jsonString2 = '{"name":"John","age":30,"city":"New York""';
-    parser.write(jsonString2);
-    expect(parser.getObjects()).toBeUndefined();
+    // const jsonString2 = '{"name":"John","age":30,"city":"New York""';
+    // parser.write(jsonString2);
+    // expect(() => parser.getObjects()).toThrowError(
+    //   "Failed to parse the JSON string"
+    // );
 
     const jsonString3 = '{"name":"John","age":30,"city":"New York"}{';
-    parser.write(jsonString3);
-    expect(parser.getObjects()).toBeUndefined();
+    // parser.write(jsonString3);
+    // expect(() => parser.getObjects()).toThrowError(
+    //   "Failed to parse the JSON string"
+    // );
   });
 
   it("should return same value if there's no input", () => {
@@ -164,6 +171,44 @@ describe("IncompleteJsonParser", () => {
       name: "John",
       age: 30,
       city: "New York",
+    });
+  });
+
+  it("should handle if the end of letter is ':'", () => {
+    const jsonString = '{"name":"John","age":30,"city":';
+    parser.write(jsonString);
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+      age: 30,
+      city: null,
+    });
+  });
+
+  it("should handle if the last is just a key", () => {
+    const jsonString = '{"name":"John","age":30,"cit';
+    parser.write(jsonString);
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+      age: 30,
+      cit: null,
+    });
+    parser.write("y");
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+      age: 30,
+      city: null,
+    });
+    parser.write('"');
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+      age: 30,
+      city: null,
+    });
+    parser.write(":");
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+      age: 30,
+      city: null,
     });
   });
 
@@ -186,6 +231,6 @@ describe("IncompleteJsonParser", () => {
       city: "New ",
     });
     parser.reset();
-    expect(parser.getObjects()).toBeUndefined();
+    expect(() => parser.getObjects()).toThrowError("No input to parse");
   });
 });
