@@ -150,4 +150,19 @@ describe("JSONStreamParser", () => {
     parser.write(jsonString3);
     expect(parser.getObjects()).toBeUndefined();
   });
+
+  it("should return same value if there's no input", () => {
+    const jsonString = '{"name":"John","age":30,"city":"New York';
+    parser.write(jsonString);
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+      age: 30,
+      city: "New York",
+    });
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+      age: 30,
+      city: "New York",
+    });
+  });
 });

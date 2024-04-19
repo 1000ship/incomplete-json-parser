@@ -1,61 +1,78 @@
 export class JSONStreamParser {
   private buffer: string = "";
+  private acculmulator: string = "";
+  private pointer: number = 0;
+  private path: string[] = [];
 
   write(chunk: string): void {
     this.buffer += chunk;
   }
 
   getObjects(): any {
-    let buffer = this.buffer.toString();
-    const path = [];
+    let postfix = "";
+    this.acculmulator += this.buffer;
+    this.buffer = "";
 
-    let parsed: any;
-
-    for (let i = 0; i < buffer.length; i++) {
-      const char = buffer[i];
+    let i;
+    for (i = this.pointer; i < this.acculmulator.length; i++) {
+      const char = this.acculmulator[i];
 
       // Skip if the character is a space
-      if (path[path.length - 1] !== '"') {
+      if (this.path[this.path.length - 1] !== '"') {
         if (char === "{" || char === "[") {
-          path.push(char);
-        } else if (char === "}" && path[path.length - 1] === "{") {
-          path.pop();
-        } else if (char === "]" && path[path.length - 1] === "[") {
-          path.pop();
+          this.path.push(char);
+        } else if (char === "}" && this.path[this.path.length - 1] === "{") {
+          this.path.pop();
+        } else if (char === "]" && this.path[this.path.length - 1] === "[") {
+          this.path.pop();
         } else if (char === "n") {
-          const remainingChars = buffer.slice(i);
+          const remainingChars = this.acculmulator.slice(i);
           if (remainingChars.startsWith("null")) {
             i += 3;
           } else if (remainingChars === "nul") {
             i += 2;
-            path.push("l");
+            postfix = "l";
           } else if (remainingChars === "nu") {
             i += 1;
-            path.push("ll");
+            postfix = "ll";
           } else {
-            path.push("ull");
+            postfix = "ull";
           }
         }
       }
 
       // Handle escaped characters
       if (char === '"') {
-        if (path[path.length - 1] === '"' && buffer[i - 1] !== "\\") {
-          path.pop();
-        } else if (path[path.length - 1] !== '"') {
-          path.push(char);
+        if (
+          this.path[this.path.length - 1] === '"' &&
+          this.acculmulator[i - 1] !== "\\"
+        ) {
+          this.path.pop();
+        } else if (this.path[this.path.length - 1] !== '"') {
+          this.path.push(char);
         }
       }
     }
+    this.pointer = i;
+
+    // Post-process the buffer
+    let result = this.acculmulator;
+    let resultPath = [...this.path];
+    let parsed: any;
 
     // If there's redundant , at the end, remove it
-    if (buffer.endsWith(",")) {
-      buffer = buffer.slice(0, -1);
+    if (result.endsWith(",")) {
+      result = result.slice(0, -1);
+    }
+
+    // Complete 'null' values
+    if (postfix.length > 0) {
+      result += postfix;
     }
 
     // Add missing parts to the buffer
-    if (path.length > 0) {
-      const missingParts = path
+    if (resultPath.length > 0) {
+      const missingParts = resultPath
         .reverse()
         .map((char) => {
           if (char === "{") return "}";
@@ -64,12 +81,12 @@ export class JSONStreamParser {
           return char;
         })
         .join("");
-      buffer += missingParts;
+      result += missingParts;
     }
 
     // Attempt to parse the buffer
     try {
-      parsed = JSON.parse(buffer);
+      parsed = JSON.parse(result);
       return parsed;
     } catch (error) {
       if (!(error instanceof SyntaxError)) {
