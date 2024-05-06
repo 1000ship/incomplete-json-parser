@@ -4,8 +4,13 @@
 
 ## Demo
 
+1. **Incomplete JSON** vs **Parse-able JSON**
+
 ![demo-small](https://github.com/1000ship/incomplete-json-parser/assets/2270565/a16c9078-a573-40dd-85cb-f2113b03eb56)
 
+2. Application example
+
+<img src="https://github.com/1000ship/incomplete-json-parser/assets/2270565/e91ace5e-1d84-4f32-a3b7-73c1d8022073" alt="application-example" width="300" height="515" />
 
 ## What is incomplete-json-parser?
 
