@@ -18,6 +18,16 @@ describe("IncompleteJsonParser", () => {
     });
   });
 
+  it("should parse complete JSON objects with trailing whitespaces", () => {
+    const jsonString = '{"name":"John","age":30,"city":"New York"}  \n  ';
+    parser.write(jsonString);
+    expect(parser.getObjects()).toEqual({
+      name: "John",
+      age: 30,
+      city: "New York",
+    });
+  });
+
   it("should complete and parse incomplete JSON objects", () => {
     const jsonString = '{"name":"John","age":30,"city":"New York"';
     parser.write(jsonString);
