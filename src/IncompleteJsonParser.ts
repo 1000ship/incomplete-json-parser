@@ -18,9 +18,13 @@ export class IncompleteJsonParser {
 
   write(chunk: string): void {
     for (let i = 0; i < chunk.length; i++) {
-      if (this.finish) throw new Error("Parser is already finished");
-
       const letter = chunk[i];
+
+      if(this.finish) {
+        if(isWhitespace(letter)) continue;
+        throw new Error("Parser is already finished");
+      }
+
       if (this.scope === undefined) {
         if (isWhitespace(letter)) continue;
         else if (letter === "{") this.scope = new ObjectScope();
