@@ -284,4 +284,30 @@ describe("IncompleteJsonParser", () => {
       },
     });
   });
+
+  it("should correctly parse escape characters in strings", () => {
+    const obj = {
+      message: 'Hello\nWorld\tTab\r\nNewline\\Backslash"Quote',
+      simple: "No escapes here",
+    };
+    const jsonString = JSON.stringify(obj);
+
+    parser.write(jsonString);
+    expect(parser.getObjects()).toEqual({
+      message: 'Hello\nWorld\tTab\r\nNewline\\Backslash"Quote',
+      simple: "No escapes here",
+    });
+  });
+
+  it("should correctly parse escaped unicode characters", () => {
+    const obj = {
+      text: "\u0048\u0065\u006C\u006C\u006F\n\u0048\u0065\u006C\u006C\u006F",
+    };
+    const jsonString = JSON.stringify(obj);
+
+    parser.write(jsonString);
+    expect(parser.getObjects()).toEqual({
+      text: "Hello\nHello",
+    });
+  });
 });
