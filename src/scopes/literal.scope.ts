@@ -37,9 +37,33 @@ export class LiteralScope extends Scope {
 
     // String
     if (this.content.startsWith('"')) {
-      if (!this.content.endsWith('\\"') && this.content.endsWith('"'))
-        return this.content.slice(1, -1).replaceAll('\\"', '"');
-      return this.content.slice(1).replaceAll('\\"', '"');
+      let jsonedString = this.content;
+
+      const isCompletedJsonString =
+        this.content.length >= 2 && // At least 2 characters ( Starting " and ending " )
+        !this.content.endsWith('\\"') && // Not ending with '\\"' (which is escaped " )
+        this.content.endsWith('"'); // Ending with "
+
+      if (!isCompletedJsonString) {
+        // Delete incomplete unicode escape at the end
+        if (/\\u[\da-fA-F]{0,3}$/.test(jsonedString)) {
+          const match = /\\u[\da-fA-F]{0,3}$/.exec(jsonedString)!;
+          jsonedString = jsonedString.slice(0, match.index);
+        }
+
+        // Delete meaningless backslash at the end ( '\' => '' )
+        if (jsonedString.endsWith("\\") && !jsonedString.endsWith("\\\\"))
+          jsonedString = jsonedString.slice(0, -1);
+
+        jsonedString += '"';
+      }
+
+      try {
+        return JSON.parse(jsonedString);
+      } catch (error) {
+        console.warn(`The string cannot be parsed: [${jsonedString}]`);
+        throw error;
+      }
     }
 
     // Number
