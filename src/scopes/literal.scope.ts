@@ -1,4 +1,5 @@
 import { Scope } from "./scope.interface";
+import { endsWithUnescapedQuote, endsWithOddBackslashes } from "./utils";
 
 export class LiteralScope extends Scope {
   content = "";
@@ -15,8 +16,7 @@ export class LiteralScope extends Scope {
     if (
       (typeof assume === "string" &&
         this.content.length >= 2 &&
-        !this.content.endsWith('\\"') &&
-        this.content.endsWith('"')) ||
+        endsWithUnescapedQuote(this.content)) ||
       (typeof assume === "boolean" && this.content === "true") ||
       (typeof assume === "boolean" && this.content === "false") ||
       (assume === null && this.content === "null")
@@ -40,9 +40,7 @@ export class LiteralScope extends Scope {
       let jsonedString = this.content;
 
       const isCompletedJsonString =
-        this.content.length >= 2 && // At least 2 characters ( Starting " and ending " )
-        !this.content.endsWith('\\"') && // Not ending with '\\"' (which is escaped " )
-        this.content.endsWith('"'); // Ending with "
+        this.content.length >= 2 && endsWithUnescapedQuote(this.content);
 
       if (!isCompletedJsonString) {
         // Delete incomplete unicode escape at the end
@@ -52,7 +50,7 @@ export class LiteralScope extends Scope {
         }
 
         // Delete meaningless backslash at the end ( '\' => '' )
-        if (jsonedString.endsWith("\\") && !jsonedString.endsWith("\\\\"))
+        if (endsWithOddBackslashes(jsonedString))
           jsonedString = jsonedString.slice(0, -1);
 
         jsonedString += '"';

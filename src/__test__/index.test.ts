@@ -310,4 +310,25 @@ describe("IncompleteJsonParser", () => {
       text: "Hello\nHello",
     });
   });
+
+  it("should correctly unescape \\n sequences in strings", () => {
+    const result = IncompleteJsonParser.parse('{"content": "a = 1\\nb = 2\\n"}');
+    expect(result.content).toBe("a = 1\nb = 2\n");
+  });
+
+  it("should handle escaped backslash before quote (\\\\\")", () => {
+    // "test\\" is a completed string with content "test\"
+    const result = IncompleteJsonParser.parse('{"value": "test\\\\"}');
+    expect(result.value).toBe("test\\");
+  });
+
+  it("should handle multiple backslashes before quote", () => {
+    // Even count: completed string
+    expect(IncompleteJsonParser.parse('{"v": "a\\\\"}').v).toBe("a\\");
+    expect(IncompleteJsonParser.parse('{"v": "a\\\\\\\\"}').v).toBe("a\\\\");
+
+    // Odd count + ends with other char: completed string
+    expect(IncompleteJsonParser.parse('{"v": "a\\n"}').v).toBe("a\n");
+    expect(IncompleteJsonParser.parse('{"v": "a\\\\\\n"}').v).toBe("a\\\n");
+  });
 });
