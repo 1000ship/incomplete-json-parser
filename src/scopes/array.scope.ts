@@ -7,6 +7,7 @@ export class ArrayScope extends Scope {
   array: Scope[] = [];
   state: "value" | "comma" = "value";
   scope?: Scope;
+  private started = false;
 
   write(letter: string): boolean {
     if (this.finish) {
@@ -14,20 +15,19 @@ export class ArrayScope extends Scope {
     }
 
     // Ignore first [
-    if (
-      this.array.length === 0 &&
-      this.state === "value" &&
-      this.scope === undefined
-    ) {
-      if (letter === "[") {
-        return true;
-      }
+    if (!this.started && letter === "[") {
+      this.started = true;
+      return true;
     }
 
     // Process the letter
     if (this.state === "value") {
       if (this.scope === undefined) {
         if (isWhitespace(letter)) {
+          return true;
+        } else if (letter === "]") {
+          // Empty array case: []
+          this.finish = true;
           return true;
         } else if (letter === "{") {
           this.scope = new ObjectScope();
@@ -54,7 +54,7 @@ export class ArrayScope extends Scope {
             return true;
           } else if (letter === ",") {
             this.scope = undefined;
-          } else if ((letter = "]")) {
+          } else if (letter === "]") {
             this.finish = true;
             return true;
           }

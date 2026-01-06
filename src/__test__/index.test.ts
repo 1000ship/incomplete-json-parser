@@ -331,4 +331,25 @@ describe("IncompleteJsonParser", () => {
     expect(IncompleteJsonParser.parse('{"v": "a\\n"}').v).toBe("a\n");
     expect(IncompleteJsonParser.parse('{"v": "a\\\\\\n"}').v).toBe("a\\\n");
   });
+
+  it("should handle empty arrays", () => {
+    expect(IncompleteJsonParser.parse("[]")).toEqual([]);
+    expect(IncompleteJsonParser.parse('{"foo": []}')).toEqual({ foo: [] });
+    expect(IncompleteJsonParser.parse("[[], []]")).toEqual([[], []]);
+  });
+
+  it("should handle chunked input with empty array after colon", () => {
+    // Issue #5: JSON split after colon with empty array value
+    const parser = new IncompleteJsonParser();
+    parser.write('{"foo":');
+    parser.write("[]}");
+    expect(parser.getObjects()).toEqual({ foo: [] });
+  });
+
+  it("should handle chunked input with array value after colon", () => {
+    const parser = new IncompleteJsonParser();
+    parser.write('{"foo":');
+    parser.write('[1, 2, 3]}');
+    expect(parser.getObjects()).toEqual({ foo: [1, 2, 3] });
+  });
 });
