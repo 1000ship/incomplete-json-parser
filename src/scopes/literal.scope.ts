@@ -81,12 +81,7 @@ export class LiteralScope extends Scope {
         jsonedString += '"';
       }
 
-      try {
-        return JSON.parse(jsonedString);
-      } catch (error) {
-        console.warn(`The string cannot be parsed: [${jsonedString}]`);
-        throw error;
-      }
+      return JSON.parse(jsonedString);
     }
 
     // Number

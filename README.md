@@ -56,7 +56,7 @@ console.log(result);
 
 In this example, we create an instance of the `IncompleteJsonParser` and write incomplete JSON data to it using the `write` method. We can write data in multiple chunks, simulating a streaming scenario.
 
-Once we have written all the necessary data, we call the `getObjects` method to parse the accumulated JSON data and retrieve the resulting JavaScript object.
+Call `getObjects` to retrieve a preview of the data parsed so far. You can then continue writing more chunks.
 
 
 
@@ -81,15 +81,22 @@ console.log(result);
 
 ### `reset(): void`
 
-Resets the parser's internal state, clearing the buffer, accumulator, pointer, and path. This method is useful when you want to reuse the same parser instance for parsing multiple JSON objects.
+Clears the current parsing state so the instance can start a new JSON document. Call this before reusing the parser after an error.
 
 ### `write(chunk: string): void`
 
-Writes a chunk of JSON data to the parser's internal buffer.
+Parses a chunk incrementally, continuing the current document. Invalid input can throw during this call, before `getObjects` is called.
 
 ### `getObjects(): any`
 
-Parses the accumulated JSON data and returns the parsed JavaScript object.
+Returns the current value, assuming missing endings for supported incomplete input. This can also throw, for example when reading an invalid string left by a failed `write`.
+
+### Usage caveats
+
+- A preview is not proof that the input is complete, valid JSON. If strict validation is required at the end of a stream, validate the complete original input separately (for example with `JSON.parse`).
+- Failed writes are not atomic: already consumed input is not rolled back. Catch errors from both `write` and `getObjects`, and call `reset` before starting a new document.
+- Treat returned values as read-only. Nested objects or arrays may share references with the parser's state; make your own deep copy before modifying them.
+- Deeply nested input uses recursion and may exceed the runtime's stack limit. There is no fixed portable nesting limit; bound input size and nesting externally when needed, and handle parsing errors.
 
 
 
