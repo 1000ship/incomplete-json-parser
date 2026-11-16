@@ -4,10 +4,12 @@ import { Scope } from "./scope.interface";
 import { isWhitespace } from "./utils";
 
 export class ObjectScope extends Scope {
-  object: any = {};
+  // JSON keys such as __proto__ are data, never prototype setters.
+  object: any = Object.create(null);
   state: "key" | "colons" | "value" | "comma" = "key";
   keyScope?: LiteralScope;
   valueScope?: Scope;
+  private started = false;
 
   write(letter: string): boolean {
     if (this.finish) {
@@ -15,19 +17,18 @@ export class ObjectScope extends Scope {
       return false;
     }
 
-    // Ignore first [
-    if (
-      Object.keys(this.object).length === 0 &&
-      this.state === "key" &&
-      this.keyScope === undefined &&
-      this.valueScope === undefined
-    ) {
-      if (letter === "{") return true;
+    // Consume the opening brace only once.
+    if (!this.started && letter === "{") {
+      this.started = true;
+      return true;
     }
 
     if (this.state === "key") {
       if (this.keyScope === undefined) {
         if (isWhitespace(letter)) {
+          return true;
+        } else if (letter === "}" && Object.keys(this.object).length === 0) {
+          this.finish = true;
           return true;
         } else if (letter === '"') {
           this.keyScope = new LiteralScope();
@@ -124,13 +125,12 @@ export class ObjectScope extends Scope {
   }
 
   getOrAssume(): object | undefined {
-    const assume = { ...this.object };
+    let assume = { ...this.object };
     if (this.keyScope || this.valueScope) {
       const key = this.keyScope?.getOrAssume();
       const value = this.valueScope?.getOrAssume();
-      if (typeof key === "string" && key.length > 0) {
-        if (typeof value !== "undefined") assume[key] = value;
-        else assume[key] = null;
+      if (typeof key === "string" && (key.length > 0 || this.keyScope?.finish)) {
+        assume = { ...assume, [key]: typeof value !== "undefined" ? value : null };
       }
     }
     return assume;

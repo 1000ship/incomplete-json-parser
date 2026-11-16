@@ -30,17 +30,13 @@ export class IncompleteJsonParser {
         else if (letter === "{") this.scope = new ObjectScope();
         else if (letter === "[") this.scope = new ArrayScope();
         else this.scope = new LiteralScope();
-        this.scope.write(letter);
-      } else {
-        const success = this.scope.write(letter);
-        if (success) {
-          if (this.scope.finish) {
-            this.finish = true;
-            continue;
-          }
-        } else {
-          throw new Error("Failed to parse the JSON string");
-        }
+      }
+      const success = this.scope.write(letter);
+      if (!success) {
+        throw new Error("Failed to parse the JSON string");
+      }
+      if (this.scope.finish) {
+        this.finish = true;
       }
     }
   }

@@ -130,6 +130,27 @@ console.log(result);
 // Output: { message: 'Hello, world!' }
 ```
 
+### Streaming Numbers
+
+Numbers support JSON exponent notation (`e` or `E`, with an optional `+` or `-`).
+An unfinished exponent previews its mantissa without discarding the exponent:
+
+```typescript
+const parser = new IncompleteJsonParser();
+parser.write('[1.5E-');
+console.log(parser.getObjects()); // [1.5]
+parser.write('2, {}]');
+console.log(parser.getObjects()); // [0.015, {}]
+```
+
+Incomplete prefixes such as `-`, `1.`, `1e`, and `1e+` can still be continued.
+Reading a preview does not finish the parser. A delimiter may terminate only a
+complete literal; a preview does not terminate an unfinished stream. Malformed
+tokens such as `[1x2]`, `[1 2]`, and `[1e+]` throw instead of silently dropping
+characters. Open containers and
+unfinished trailing commas (for example `[1,`) still preview their values,
+but a closing delimiter cannot turn a trailing comma into valid JSON.
+
 ### Handling `null` Values with Different Lengths
 
 ```typescript
@@ -140,7 +161,7 @@ const result1 = parser.getObjects();
 console.log(result1);
 // Output: { value: null }
 
-parser.write('{"value": nu');
+parser.write('u');
 const result2 = parser.getObjects();
 console.log(result2);
 // Output: { value: null }

@@ -27,6 +27,7 @@ export class ArrayScope extends Scope {
           return true;
         } else if (letter === "]") {
           // Empty array case: []
+          if (this.array.length > 0) throw new Error("Expected value after comma");
           this.finish = true;
           return true;
         } else if (letter === "{") {
@@ -49,14 +50,13 @@ export class ArrayScope extends Scope {
           if (this.scope.finish) this.state = "comma";
           return true;
         } else {
-          if (this.scope.finish) {
-            this.state = "comma";
-            return true;
-          } else if (letter === ",") {
+          if (letter === ",") {
             this.scope = undefined;
           } else if (letter === "]") {
             this.finish = true;
             return true;
+          } else {
+            throw new Error(`Expected comma or ], got ${letter}`);
           }
           return true;
         }

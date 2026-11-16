@@ -1,4 +1,4 @@
-export const isWhitespace = (char: string) => /\s/.test(char);
+export const isWhitespace = (char: string) => /^[ \t\r\n]$/.test(char);
 
 /**
  * Check if string ends with an unescaped quote.

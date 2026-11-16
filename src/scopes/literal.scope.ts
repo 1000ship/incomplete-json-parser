@@ -1,11 +1,33 @@
 import { Scope } from "./scope.interface";
-import { endsWithUnescapedQuote, endsWithOddBackslashes } from "./utils";
+import {
+  endsWithUnescapedQuote,
+  endsWithOddBackslashes,
+  isWhitespace,
+} from "./utils";
+
+const completeNumber = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+const partialNumber = /^-?(?:0|[1-9]\d*)(?:(?:\.\d+)?(?:[eE][+-]?\d*)?|\.)$/;
 
 export class LiteralScope extends Scope {
   content = "";
 
   write(letter: string): boolean {
     if (this.finish) throw new Error("Literal already finished");
+
+    if (
+      this.content !== "" &&
+      !this.content.startsWith('"') &&
+      (isWhitespace(letter) || ",]}".includes(letter))
+    ) {
+      if (!completeNumber.test(this.content)) {
+        throw new Error(`Incomplete literal: ${this.content}`);
+      }
+      if (isWhitespace(letter)) {
+        this.finish = true;
+        return true;
+      }
+      return false; // The enclosing scope must consume the delimiter.
+    }
 
     this.content += letter;
     const assume = this.getOrAssume();
@@ -44,9 +66,12 @@ export class LiteralScope extends Scope {
 
       if (!isCompletedJsonString) {
         // Delete incomplete unicode escape at the end
-        if (/\\u[\da-fA-F]{0,3}$/.test(jsonedString)) {
-          const match = /\\u[\da-fA-F]{0,3}$/.exec(jsonedString)!;
-          jsonedString = jsonedString.slice(0, match.index);
+        const incompleteUnicode = /\\u[\da-fA-F]{0,3}$/.exec(jsonedString);
+        if (
+          incompleteUnicode &&
+          endsWithOddBackslashes(jsonedString.slice(0, incompleteUnicode.index + 1))
+        ) {
+          jsonedString = jsonedString.slice(0, incompleteUnicode.index);
         }
 
         // Delete meaningless backslash at the end ( '\' => '' )
@@ -66,9 +91,9 @@ export class LiteralScope extends Scope {
 
     // Number
     if (this.content === "-") return 0;
-    const numberRegex = /^-?\d+(\.\d*)?$/;
-    if (numberRegex.test(this.content)) {
-      return parseFloat(this.content);
+    if (partialNumber.test(this.content)) {
+      // Preview the mantissa until the exponent has at least one digit.
+      return Number(this.content.replace(/[eE][+-]?$/, ""));
     }
 
     // Cannot assume
