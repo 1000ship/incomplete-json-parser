@@ -76,7 +76,7 @@ jobs:
           printf 'state=%s\n' "$state" >> "$GITHUB_OUTPUT"
           printf 'Public registry state: %s\n' "$state"
       - name: Validate-only pack/publish dry run (never publishes)
-        if: inputs.mode == 'validate'
+        if: inputs.mode == 'validate' && steps.registry.outputs.state == 'absent'
         shell: bash
         run: |
           set -euo pipefail
