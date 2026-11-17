@@ -101,7 +101,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(node .github/release/verify-release.mjs registry)" = 'present'
+          # npm can accept the publish before its public read replicas expose it.
+          # Retry only anonymous reads; never repeat npm publish.
+          state='absent'
+          for attempt in {1..12}; do
+            state="$(node .github/release/verify-release.mjs registry)"
+            if [ "$state" = 'present' ]; then break; fi
+            test "$state" = 'absent'
+            if [ "$attempt" -lt 12 ]; then sleep 10; fi
+          done
+          test "$state" = 'present'
           consumer="$(mktemp -d "$RUNNER_TEMP/npm-public-consumer.XXXXXX")"
           cp .github/release/consumer.cjs "$consumer/consumer.cjs"
           printf '{"private":true}\n' > "$consumer/package.json"
