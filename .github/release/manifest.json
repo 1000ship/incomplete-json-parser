@@ -1,0 +1,9 @@
+{
+  "name": "incomplete-json-parser",
+  "version": "2.0.0",
+  "repository": "git+https://github.com/1000ship/incomplete-json-parser.git",
+  "tarball": "incomplete-json-parser-2.0.0.tgz",
+  "sha256": "825825fd4bd6853bed16aae0071b81575917ce651e6bbd55b26bbc0c5f59b051",
+  "shasum": "fb38da9021d0efbae19bed1dc3747410ab9736f5",
+  "integrity": "sha512-4k02cLKHu8+YAEcC/eY6fRhez0KTx2rGjo9E/qhYmS/yW0oIpFGWvt2XnB+WqNDs8+BkkWiPeo2A4rlfYZ+DBQ=="
+}

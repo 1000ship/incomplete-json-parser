@@ -1,0 +1,109 @@
+name: Publish reviewed npm 2.0.0
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Validate only (default), or explicitly publish the reviewed 2.0.0 tarball
+        type: choice
+        options: [validate, publish]
+        default: validate
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: incomplete-json-parser-npm-2.0.0
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == '1000ship/incomplete-json-parser' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RELEASE_MODE: ${{ inputs.mode }}
+      NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+      NPM_CONFIG_FETCH_RETRIES: '0'
+    steps:
+      - name: Checkout the dispatched commit without persisted credentials
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set supported Node without package-manager cache or npm auth file
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '24.13.1'
+          package-manager-cache: false
+      - name: Pin npm and isolate its configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/npm-release-userconfig"
+          export NPM_CONFIG_GLOBALCONFIG="$RUNNER_TEMP/npm-release-globalconfig"
+          printf 'NPM_CONFIG_USERCONFIG=%s\nNPM_CONFIG_GLOBALCONFIG=%s\n' "$NPM_CONFIG_USERCONFIG" "$NPM_CONFIG_GLOBALCONFIG" >> "$GITHUB_ENV"
+          : > "$NPM_CONFIG_USERCONFIG"
+          : > "$NPM_CONFIG_GLOBALCONFIG"
+          npm install --global npm@11.8.0 --ignore-scripts --no-audit --no-fund
+          test "$(node --version)" = 'v24.13.1'
+          test "$(npm --version)" = '11.8.0'
+      - name: Verify context, artifact hash, identity and admission regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node .github/release/verify-release.mjs
+          node --test .github/release/verify-release.test.mjs
+      - name: Fresh consumer of the exact local tarball (no lifecycle scripts)
+        shell: bash
+        run: |
+          set -euo pipefail
+          consumer="$(mktemp -d "$RUNNER_TEMP/npm-local-consumer.XXXXXX")"
+          cp .github/release/consumer.cjs "$consumer/consumer.cjs"
+          printf '{"private":true}\n' > "$consumer/package.json"
+          npm install --prefix "$consumer" --ignore-scripts --no-audit --no-fund --package-lock=false "$GITHUB_WORKSPACE/.github/release/incomplete-json-parser-2.0.0.tgz"
+          node --test "$consumer/consumer.cjs"
+      - name: Check anonymous public registry before any publish
+        id: registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          state="$(node .github/release/verify-release.mjs registry)"
+          printf 'state=%s\n' "$state" >> "$GITHUB_OUTPUT"
+          printf 'Public registry state: %s\n' "$state"
+      - name: Validate-only pack/publish dry run (never publishes)
+        if: inputs.mode == 'validate'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .github/release/verify-release.mjs
+          npm publish .github/release/incomplete-json-parser-2.0.0.tgz --dry-run --ignore-scripts --access public --tag latest --registry=https://registry.npmjs.org/
+      - name: Publish once with npm OIDC, only when explicitly requested and absent
+        if: inputs.mode == 'publish' && steps.registry.outputs.state == 'absent'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Recheck immediately before the sole write. Never retry an uncertain publish.
+          state="$(node .github/release/verify-release.mjs registry)"
+          if [ "$state" = 'present' ]; then
+            printf 'Exact release already present; skipping publish.\n'
+            exit 0
+          fi
+          test "$state" = 'absent'
+          node .github/release/verify-release.mjs
+          npm publish .github/release/incomplete-json-parser-2.0.0.tgz --ignore-scripts --access public --tag latest --registry=https://registry.npmjs.org/
+      - name: Read back published integrity anonymously and fresh-install the public release
+        if: inputs.mode == 'publish' || steps.registry.outputs.state == 'present'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(node .github/release/verify-release.mjs registry)" = 'present'
+          consumer="$(mktemp -d "$RUNNER_TEMP/npm-public-consumer.XXXXXX")"
+          cp .github/release/consumer.cjs "$consumer/consumer.cjs"
+          printf '{"private":true}\n' > "$consumer/package.json"
+          npm install --prefix "$consumer" --ignore-scripts --no-audit --no-fund --package-lock=false --registry=https://registry.npmjs.org/ incomplete-json-parser@2.0.0
+          node --test "$consumer/consumer.cjs"

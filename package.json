@@ -2,6 +2,10 @@
   "name": "incomplete-json-parser",
   "version": "2.0.0",
   "homepage": "https://github.com/1000ship/incomplete-json-parser",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1000ship/incomplete-json-parser.git"
+  },
   "author": {
     "name": "Dante Chun",
     "email": "dev.1000ship@gmail.com",
